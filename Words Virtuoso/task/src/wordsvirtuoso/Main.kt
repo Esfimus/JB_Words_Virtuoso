@@ -37,7 +37,7 @@ class User {
             println(w)
         }
         val wrongCharString = wrongCharacters.toList().sorted().joinToString("")
-        if (wrongCharString.isNotEmpty() && !correctAnswer) println("\n$wrongCharString")
+        if (wrongCharString.isNotEmpty() && !correctAnswer) println("\n\u001B[48:5:14m$wrongCharString\u001B[0m")
     }
 }
 
@@ -124,19 +124,19 @@ fun wordsVirtuoso(args: Array<String>) {
  * Builds clue word based on user word's letters
  */
 fun clueWord(randomWord: String, userWord: String, userObject: User) {
-    var clueList = ""
+    var clueWord = ""
     for (i in userWord.indices) {
-        clueList += if (userWord[i] == randomWord[i]) {
-            userWord[i].uppercaseChar()
+        clueWord += if (userWord[i] == randomWord[i]) {
+            "\u001B[48:5:10m${userWord[i].uppercaseChar()}\u001B[0m"
         } else if (randomWord.contains(userWord[i])) {
-            userWord[i]
+            "\u001B[48:5:11m${userWord[i].uppercaseChar()}\u001B[0m"
         } else {
             userObject.wrongCharacters.add(userWord[i].uppercaseChar())
-            '_'
+            "\u001B[48:5:7m${userWord[i].uppercaseChar()}\u001B[0m"
         }
     }
-    userObject.attemptsWords.add(clueList)
-    if (!clueList.contains('_')) userObject.correctAnswer = true
+    userObject.attemptsWords.add(clueWord)
+    if (userWord.lowercase() == randomWord.lowercase()) userObject.correctAnswer = true
     userObject.displayAttempts()
 }
 
