@@ -13,6 +13,34 @@ class Words {
     }
 }
 
+class User {
+    var attemptsCount = 0
+    val wrongCharacters = mutableSetOf<Char>()
+    val attemptsWords = mutableListOf<String>()
+    private var startTime: Long = 0
+    private var endTime: Long = 0
+    var correctAnswer = false
+
+    fun startTimer() {
+        startTime = System.currentTimeMillis()
+    }
+
+    fun stopTimer() {
+        endTime = System.currentTimeMillis()
+    }
+
+    fun duration(): Long = (endTime - startTime) / 1000
+
+    fun displayAttempts() {
+        println()
+        for (w in attemptsWords) {
+            println(w)
+        }
+        val wrongCharString = wrongCharacters.toList().sorted().joinToString("")
+        if (wrongCharString.isNotEmpty() && !correctAnswer) println("\n$wrongCharString")
+    }
+}
+
 /**
  * Checks input word for the right length and characters
  */
@@ -95,7 +123,7 @@ fun wordsVirtuoso(args: Array<String>) {
 /**
  * Builds clue word based on user word's letters
  */
-fun clueWord(randomWord: String, userWord: String) {
+fun clueWord(randomWord: String, userWord: String, userObject: User) {
     var clueList = ""
     for (i in userWord.indices) {
         clueList += if (userWord[i] == randomWord[i]) {
@@ -103,10 +131,13 @@ fun clueWord(randomWord: String, userWord: String) {
         } else if (randomWord.contains(userWord[i])) {
             userWord[i]
         } else {
+            userObject.wrongCharacters.add(userWord[i].uppercaseChar())
             '_'
         }
     }
-    println(clueList)
+    userObject.attemptsWords.add(clueList)
+    if (!clueList.contains('_')) userObject.correctAnswer = true
+    userObject.displayAttempts()
 }
 
 /**
@@ -114,20 +145,29 @@ fun clueWord(randomWord: String, userWord: String) {
  */
 fun startGame(allWords: Words, candidateWords: Words) {
     println("Words Virtuoso")
-    val randomWord = candidateWords.getRandomWord()
+    val randomWord = candidateWords.getRandomWord().lowercase()
+    val userObject = User()
     do {
         println("\nInput a 5-letter word:")
+        userObject.startTimer()
         val userInput = readln().lowercase()
         if (userInput == "exit") {
             println("\nThe game is over.")
             exitProcess(0)
         }
+        userObject.attemptsCount++
         if (inputWordAnalysis(userInput, allWords)) {
+            clueWord(randomWord, userInput, userObject)
             if (userInput == randomWord) {
+                userObject.stopTimer()
                 println("\nCorrect!")
+                if (userObject.attemptsCount == 1) {
+                    println("Amazing luck! The solution was found at once.")
+                } else {
+                    println("The solution was found after ${userObject.attemptsCount} " +
+                            "tries in ${userObject.duration()} seconds.")
+                }
                 exitProcess(0)
-            } else {
-                clueWord(randomWord, userInput)
             }
         }
     } while(true)
