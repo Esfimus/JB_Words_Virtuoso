@@ -1,12 +1,16 @@
 package wordsvirtuoso
 
 import java.io.File
+import kotlin.random.Random
 import kotlin.system.exitProcess
 
 class Words {
     private val wordsSet = mutableSetOf<String>()
     fun getWordsSet() = wordsSet
     fun addWord(word: String) = wordsSet.add(word.lowercase())
+    fun getRandomWord(): String {
+        return wordsSet.toList()[Random.nextInt(0, wordsSet.size)]
+    }
 }
 
 /**
@@ -16,6 +20,27 @@ fun wordAnalysis(word: String): Boolean {
     return !(word.length != 5 ||
             !"""[a-zA-Z]{5}""".toRegex().matches(word) ||
             """.*(.).*\1+.*""".toRegex().matches(word.lowercase()))
+}
+
+/**
+ * Checks user input
+ */
+fun inputWordAnalysis(word: String, allWords: Words): Boolean {
+    return if (word.length != 5) {
+        println("The input isn't a 5-letter word.")
+        false
+    } else if (!"""[a-zA-Z]{5}""".toRegex().matches(word)) {
+        println("One or more letters of the input aren't valid.")
+        false
+    } else if (""".*(.).*\1+.*""".toRegex().matches(word.lowercase())) {
+        println("The input has duplicate letters.")
+        false
+    } else if (!allWords.getWordsSet().contains(word)) {
+        println("The input word isn't included in my words list.")
+        false
+    } else {
+        true
+    }
 }
 
 /**
@@ -63,8 +88,49 @@ fun wordsVirtuoso(args: Array<String>) {
             println("Error: ${includedWords.size} candidate words are not included in the ${args[0]} file.")
             exitProcess(0)
         }
-        println("Words Virtuoso")
+        startGame(allWordsCollection, candidateWordsCollection)
     }
+}
+
+/**
+ * Builds clue word based on user word's letters
+ */
+fun clueWord(randomWord: String, userWord: String) {
+    var clueList = ""
+    for (i in userWord.indices) {
+        clueList += if (userWord[i] == randomWord[i]) {
+            userWord[i].uppercaseChar()
+        } else if (randomWord.contains(userWord[i])) {
+            userWord[i]
+        } else {
+            '_'
+        }
+    }
+    println(clueList)
+}
+
+/**
+ * Guess word game with hints
+ */
+fun startGame(allWords: Words, candidateWords: Words) {
+    println("Words Virtuoso")
+    val randomWord = candidateWords.getRandomWord()
+    do {
+        println("\nInput a 5-letter word:")
+        val userInput = readln().lowercase()
+        if (userInput == "exit") {
+            println("\nThe game is over.")
+            exitProcess(0)
+        }
+        if (inputWordAnalysis(userInput, allWords)) {
+            if (userInput == randomWord) {
+                println("\nCorrect!")
+                exitProcess(0)
+            } else {
+                clueWord(randomWord, userInput)
+            }
+        }
+    } while(true)
 }
 
 fun main(args: Array<String>) {
